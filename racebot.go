@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 var (
 	lightSensor = gogrove.PortA0
+	button2     = gogrove.PortD2
 	button1     = gogrove.PortD3
 	relay       = gogrove.PortD5
 	led1        = gogrove.PortD6
@@ -43,6 +45,7 @@ func init() {
 
 	session.SetPortMode(lightSensor, gogrove.ModeInput)
 	session.SetPortMode(button1, gogrove.ModeInput)
+	session.SetPortMode(button2, gogrove.ModeInput)
 	session.SetPortMode(led1, gogrove.ModeOutput)
 	session.SetPortMode(relay, gogrove.ModeOutput)
 }
@@ -73,7 +76,8 @@ func waitForButtonPress() error {
 	for {
 		bpress, err := session.DigitalRead(button1)
 		if err != nil {
-			return fmt.Errorf("check button: %v", err)
+			continue
+			//return fmt.Errorf("check button: %v", err)
 		}
 		if bpress == 1 {
 			break
@@ -87,7 +91,7 @@ func waitForLightBreak(ambient uint16) error {
 	for {
 		lightval, err := session.AnalogRead(lightSensor)
 		if err != nil {
-			log.Printf("ERR: check light sensor: %v", err)
+			//log.Printf("ERR: check light sensor: %v", err)
 			continue
 		}
 		//log.Printf("ambient: %v, lightval: %v, diff: %v", ambient, lightval, lightval-ambient)
@@ -145,11 +149,31 @@ func racebot() {
 	}
 }
 
+func waitForShutdownButton() {
+	for {
+		bpress, err := session.DigitalRead(button2)
+		if err != nil {
+			continue
+		}
+		if bpress == 1 {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	lcd.SetText("SHUTDOWN")
+	lcd.SetRGB(0, 255, 255)
+
+	cmd := exec.Command("/sbin/halt")
+	cmd.Run()
+}
+
 func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go racebot()
+	go waitForShutdownButton()
 
 	<-sigs
 	cleanup()
