@@ -23,7 +23,9 @@ var (
 	lcd         *gogrove.LCD
 
 	tracklengthInInches float64 = 162
-	mphConv                     = (tracklengthInInches * secInHour) / inchesInMile
+	// display demo
+	// tracklengthInInches float64 = 23
+	mphConv = (tracklengthInInches * secInHour) / inchesInMile
 )
 
 const (
@@ -130,6 +132,7 @@ func displayResults(et time.Duration) {
 func racebot() {
 	for {
 		startingGateReady()
+		time.Sleep(500 * time.Millisecond)
 		err := waitForButtonPress()
 		if err != nil {
 			showErr(err)
