@@ -4,6 +4,7 @@ Go code for pinewood derby track race tests
 Uses GrovePi with following sensors:
 
 * light sensor (A0)
+* button (D2) (for shutdown of Pi)
 * button (D3)
 * relay (D5)
 * LED (D6)
